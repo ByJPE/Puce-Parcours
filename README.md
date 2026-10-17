@@ -26,5 +26,7 @@ Un seul fichier, aucune dépendance : ouvrir `index.html` dans un navigateur.
 
 Sur iPhone, l'inclinaison demande une autorisation au clic sur « Jouer » et nécessite une page servie en HTTPS (par exemple GitHub Pages) ouverte directement dans Safari.
 
+https://byjpe.github.io/Puce-Parcours/
+
 ## Sauvegarde
 Le record et le niveau atteint sont enregistrés dans le `localStorage` du navigateur.
