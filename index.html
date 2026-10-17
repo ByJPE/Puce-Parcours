@@ -54,15 +54,15 @@ function build(k){
 }
 function start(k){
  n=k;build(k);P={x:60,y:420,vx:0,vy:0,w:40,h:40,og:0,inv:60,face:1,safe:60};
- st='play';bn=170;setUI();
+ st='play';bn=170;setUI();musicPlay(k);
 }
 function hurt(){
- if(P.inv>0)return;lives--;P.inv=100;P.vy=-8;P.vx=-P.face*4;
+ if(P.inv>0)return;lives--;P.inv=100;P.vy=-8;sfx('hurt');P.vx=-P.face*4;
  for(let i=0;i<10;i++)part(P.x+20,P.y+20,'#ff5a7a');
  if(lives<=0){st='over';if(score>sv.best)sv.best=score;save();setUI()}
 }
 function part(x,y,c){L.pt.push({x,y,vx:(Math.random()-.5)*5,vy:-Math.random()*5,l:30,c})}
-function die(){
+function die(){sfx('hurt');
  lives--;
  if(lives<=0){st='over';if(score>sv.best)sv.best=score;save();setUI();return}
  P.x=Math.max(60,P.safe-40);P.y=300;P.vy=0;P.vx=0;P.inv=100;
@@ -74,14 +74,14 @@ function update(dt){
  if(tiltOn&&tiltPref)ax=Math.abs(tilt)<3?0:Math.max(-1,Math.min(1,tilt/22));
  if(ax)P.face=ax>0?1:-1;
  P.vx+=(ax*max-P.vx)*.14*dt;
- if(jb>0){jb-=dt;if(P.og){P.vy=-12.8;P.og=0;jb=0;for(let i=0;i<8;i++)part(P.x+20,P.y+40,'#fff3a0')}}
+ if(jb>0){jb-=dt;if(P.og){P.vy=-12.8;P.og=0;jb=0;sfx('jump');for(let i=0;i<8;i++)part(P.x+20,P.y+40,'#fff3a0')}}
  const pb=P.y+P.h;P.vy+=.6*dt;P.y+=P.vy*dt;P.x+=P.vx*dt;if(P.x<0){P.x=0;P.vx=0}
  const b=P.y+P.h;let og=0;
  for(const s of L.gr)if(P.x+P.w>s[0]&&P.x<s[1]&&pb<=GY+3&&b>=GY&&P.vy>=0){P.y=GY-P.h;P.vy=0;og=1;P.safe=P.x}
  for(const p of L.pl)if(P.x+P.w>p.x&&P.x<p.x+p.w&&pb<=p.y+6&&b>=p.y&&P.vy>=0){P.y=p.y-P.h;P.vy=0;og=1;P.x+=p.dx}
  P.og=og;if(P.inv>0)P.inv-=dt;
  if(P.y>700){die();return}
- for(const c of L.co)if(!c.got&&Math.abs(c.x-P.x-20)<28&&Math.abs(c.y-P.y-20)<32){c.got=1;score+=c.neon?50:10;for(let i=0;i<6;i++)part(c.x,c.y,c.neon?'#39ff14':'#ffd23a')}
+ for(const c of L.co)if(!c.got&&Math.abs(c.x-P.x-20)<28&&Math.abs(c.y-P.y-20)<32){c.got=1;score+=c.neon?50:10;sfx('coin');for(let i=0;i<6;i++)part(c.x,c.y,c.neon?'#39ff14':'#ffd23a')}
  for(const e of L.en){
   if(!e.alive)continue;e.t+=dt;
   if(e.ty==0){e.x+=e.vx*e.dir*dt;if(e.x<e.a)e.dir=1;if(e.x>e.b)e.dir=-1}
@@ -89,7 +89,7 @@ function update(dt){
    e.vy+=.6*dt;e.y+=e.vy*dt;if(e.y>=GY-e.h){e.y=GY-e.h;e.vy=0;if(e.t>80){e.vy=-10;e.t=0}}}
   else if(Math.abs(e.x-P.x)<LW*.6&&e.t>130){e.t=0;L.fb.push({x:e.x,y:e.y+8,vx:(P.x<e.x?-1:1)*(3+k*.2)})}
   if(P.x+P.w>e.x&&P.x<e.x+e.w&&P.y+P.h>e.y&&P.y<e.y+e.h){
-   if(P.vy>0&&pb<=e.y+14){e.alive=0;P.vy=-9;score+=100;for(let i=0;i<10;i++)part(e.x+13,e.y+10,'#b06bff')}else hurt();
+   if(P.vy>0&&pb<=e.y+14){e.alive=0;P.vy=-9;score+=100;sfx('stomp');for(let i=0;i<10;i++)part(e.x+13,e.y+10,'#b06bff')}else hurt();
    if(st!=='play')return;
   }
  }
@@ -98,7 +98,7 @@ function update(dt){
  L.pt.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=.25*dt;p.l-=dt});L.pt=L.pt.filter(p=>p.l>0);
  if(bn>0)bn-=dt;
  if(P.x>=L.len){
-  score+=200+lives*50;lives=Math.min(5,lives+1);
+  sfx('flag');score+=200+lives*50;lives=Math.min(5,lives+1);
   if(n>=9){st='win';sv.max=10}else{sv.max=Math.max(sv.max,n+2);start(n+1)}
   if(score>sv.best)sv.best=score;save();setUI();
  }
@@ -231,16 +231,47 @@ function catOld(x,y){
  g.fillStyle='#fff';g.fillRect(x+9+o,y+14,2,2);g.fillRect(x+19+o,y+14,2,2);
  g.fillStyle='#ff8fb1';g.fillRect(x+13+o,y+20,3,2);
 }
+let AC=null,mute=false,mT=null,mDelay=0,mNext=0,mStep=0,mel=null;
+function audioInit(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume()}
+function tone(f,t0,d,type,v,slide){if(!AC)return;const o=AC.createOscillator(),gn=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t0);if(slide)o.frequency.exponentialRampToValueAtTime(slide,t0+d);gn.gain.setValueAtTime(.0001,t0);gn.gain.exponentialRampToValueAtTime(v,t0+.01);gn.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(gn);gn.connect(AC.destination);o.start(t0);o.stop(t0+d+.02)}
+function sfx(n){
+ if(n==='flag')mDelay=1.4;
+ if(!AC||mute)return;const t0=AC.currentTime;
+ if(n==='jump')tone(300,t0,.18,'square',.1,700);
+ else if(n==='stomp'){tone(1200,t0,.1,'sine',.18,2400);tone(260,t0+.04,.14,'triangle',.2,90)}
+ else if(n==='coin'){tone(988,t0,.08,'square',.06);tone(1319,t0+.07,.16,'square',.06)}
+ else if(n==='hurt')tone(400,t0,.3,'sawtooth',.1,90);
+ else if(n==='flag')[523,659,784,1047,784,1047,1319].forEach((f,i)=>tone(f,t0+i*.13,.24,'triangle',.18));
+}
+const MW=['triangle','sine','triangle','sine','triangle','square','sine','triangle','sine','triangle'],MR=[0,5,7,2,9,4,10,3,8,0],PE=[0,2,4,7,9];
+function mkMel(k){
+ const R=rng(k*101+9);let d=2+(R()*3|0);
+ const bar=()=>{const b=[];for(let i=0;i<8;i++){if(i==0||i%2==0&&R()<.85||R()<.45){d=Math.max(0,Math.min(9,d+((R()*5|0)-2)));b.push(d)}else b.push(null)}return b};
+ const A=bar(),B=bar(),A2=A.slice();if(A2[6]!=null)A2[6]=Math.max(0,A2[6]-1);
+ const E=bar();E[6]=1;E[7]=0;
+ return{n:[...A,...B,...A2,...E],root:MR[k],bpm:88+((k*5)%7)*7,w:MW[k]};
+}
+function musicStop(){clearInterval(mT);mT=null;mel=null}
+function musicPlay(k){
+ musicStop();if(!AC||mute)return;mel=mkMel(k);mStep=0;mNext=AC.currentTime+(mDelay||.25);mDelay=0;
+ mT=setInterval(()=>{if(!mel||!AC)return;const sd=60/mel.bpm/2;
+  while(mNext<AC.currentTime+.4){const i=mStep%32,d=mel.n[i];
+   if(d!=null){const m=60+mel.root+12*Math.floor(d/5)+PE[d%5];tone(440*Math.pow(2,(m-69)/12),mNext,sd*1.7,mel.w,.07)}
+   if(i%4==0){const bm=48+mel.root+(i%8==4?7:0);tone(440*Math.pow(2,(bm-69)/12),mNext,sd*3.2,'triangle',.06)}
+   mNext+=sd;mStep++}
+ },100);
+}
 function setUI(){
- ui.innerHTML='';ctl.style.display='none';
+ ui.innerHTML='';ctl.style.display='none';if(st!=='play')musicStop();
  const add=(l,f,c)=>{const b=document.createElement('button');b.textContent=l;if(c)b.className=c;b.onclick=f;ui.appendChild(b)};
  if(st==='play'){ui.style.display='none';ctl.style.display=(tiltOn&&tiltPref)?'none':'flex';return}
  ui.style.display='flex';
  add(st==='menu'?'▶ Jouer':'↻ Rejouer',()=>go(0));
  if(sv.max>1)add('Niveau '+sv.max,()=>go(sv.max-1),'alt');
  add('Inclinaison : '+(tiltPref?'oui':'non'),()=>{tiltPref=!tiltPref;setUI()},'alt');
+ add('Son : '+(mute?'non':'oui'),()=>{mute=!mute;if(mute)musicStop();setUI()},'alt');
 }
-async function go(k){
+async function go(k){audioInit();
  if(!hasTilt){
   try{
    if(window.DeviceOrientationEvent&&DeviceOrientationEvent.requestPermission){const r=await DeviceOrientationEvent.requestPermission();if(r!=='granted'){tiltMsg='Capteurs refusés par iOS';throw 0}}
@@ -263,5 +294,6 @@ function loop(now){
  if(st==='play')update(dt);else t+=dt;
  draw();requestAnimationFrame(loop);
 }
+document.addEventListener('visibilitychange',()=>{if(!AC)return;document.hidden?AC.suspend():AC.resume()});
 setUI();requestAnimationFrame(loop);
 </script></body></html>
