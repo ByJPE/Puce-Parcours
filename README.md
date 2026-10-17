@@ -1,6 +1,6 @@
 # Puce & Parcours
 
-Jeu de plateforme 2½D pour smartphone (style Mario) : un petit chat à chapeau rouge traverse 10 niveaux, saute sur des souris et ramasse des pièces.
+Jeu de plateforme 2½D pour smartphone : un petit chat à chapeau rouge traverse 10 niveaux, saute sur des souris et ramasse des pièces.
 
 ## Contrôles
 - **Toucher l'écran** : sauter
